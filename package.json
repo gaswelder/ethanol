@@ -1,0 +1,19 @@
+{
+	"name": "eth-humans",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "gaswelder",
+	"license": "ISC",
+	"dependencies": {
+		"eth-lightwallet": "^3.0.1",
+		"hooked-web3-provider": "^1.0.0",
+		"web3": "^0.20.7"
+	},
+	"devDependencies": {
+		"tap": "^12.0.1"
+	}
+}
