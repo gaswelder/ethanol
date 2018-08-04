@@ -1,7 +1,4 @@
-const child_process = require("child_process");
-const fs = require("fs");
 const net = require("net");
-const path = require("path");
 const Web3 = require("web3");
 const User = require("./user");
 const Vault = require("./vault");
@@ -10,8 +7,7 @@ const vault = new Vault();
 
 module.exports = {
 	root,
-	user,
-	deploy
+	user
 };
 
 async function root() {
@@ -22,26 +18,6 @@ async function root() {
 async function user() {
 	const web3 = await vault.makeWeb3();
 	return new User(web3, web3._defaultAccount);
-}
-
-async function deploy(user, contractPath, args = []) {
-	const { abi, bin } = await build(contractPath);
-	return user.deploy(abi, bin, args);
-}
-
-async function build(contractPath) {
-	const dirname = "build";
-	const buildDir = path.join(dirname, path.dirname(contractPath));
-	child_process.execSync(
-		`solc --abi --bin --overwrite -o ${buildDir} ${contractPath}.sol`
-	);
-	return {
-		abi: JSON.parse(
-			fs.readFileSync(dirname + "/" + contractPath + ".abi").toString()
-		),
-		bin:
-			"0x" + fs.readFileSync(dirname + "/" + contractPath + ".bin").toString()
-	};
 }
 
 function getWeb3() {

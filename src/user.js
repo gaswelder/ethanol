@@ -45,24 +45,20 @@ class User {
 	/**
 	 * Deploys a contract.
 	 *
-	 * @param {object} abi Parse JSON interface
-	 * @param {string} bin String starting with '0x'
+	 * @param {ContractBlank} contractBlank Contract definition.
 	 * @param {array} args Contract constructor arguments
 	 */
-	async deploy(abi, bin, args = []) {
-		if (!abi) throw new Error("abi argument is missing");
-		if (!bin) throw new Error("bin argument is mising");
-		if (bin == "0x") throw new Error("invalid bin value: " + bin);
+	async deploy(blankContract, args = []) {
 		return new Promise((ok, fail) => {
 			this._web3.eth
-				.contract(abi)
+				.contract(blankContract.abi)
 				.new(
 					...args,
-					{ data: bin, gas: 2100000, from: this.address() },
+					{ data: blankContract.bin, gas: 2100000, from: this.address() },
 					function(err, contract) {
 						if (err) return fail(err);
 						if (contract.address) {
-							ok(new Contract(abi, contract.address));
+							ok(new Contract(blankContract.abi, contract.address));
 						}
 					}
 				);

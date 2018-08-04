@@ -1,5 +1,6 @@
 const tap = require("tap");
-const { user, root, deploy } = require("../src/ethanol");
+const { user, root } = require("../src/ethanol");
+const ContractBlank = require("../src/contract-blank");
 
 tap.tearDown(function() {
 	process.exit(0);
@@ -12,7 +13,9 @@ tap.test("main", async function(t) {
 	t.notEqual((await god.balance()).toString(), "0", "god has ether");
 	//t.equal((await alice.balance()).toString(), "0", "alice has no ether");
 
-	const coin = await deploy(god, "tests/TokenERC20", [100, "Testcoin", "TST"]);
+	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
+
+	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
 
 	t.test("balances", async function(t) {
 		t.equal(
