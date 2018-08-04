@@ -22,6 +22,12 @@ class User {
 		});
 	}
 
+	/**
+	 * Transfers ether from this user to another user.
+	 *
+	 * @param {User} user The receiver
+	 * @param {Number|String|BigNumber} amount Number of Wei to transfer.
+	 */
 	async give(user, amount) {
 		return new Promise((resolve, fail) => {
 			const tr = {
