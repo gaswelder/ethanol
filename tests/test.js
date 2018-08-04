@@ -1,6 +1,5 @@
 const tap = require("tap");
-const { user, root } = require("../src/ethyl");
-const ContractBlank = require("../src/contract-blank");
+const { user, root, ContractBlank } = require("../src/ethyl");
 
 tap.tearDown(function() {
 	process.exit(0);

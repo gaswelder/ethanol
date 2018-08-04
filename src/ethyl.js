@@ -1,5 +1,6 @@
 const net = require("net");
 const Web3 = require("web3");
+const ContractBlank = require("./contract-blank");
 const User = require("./user");
 const Vault = require("./vault");
 
@@ -7,7 +8,8 @@ const vault = new Vault();
 
 module.exports = {
 	root,
-	user
+	user,
+	ContractBlank
 };
 
 async function root() {
