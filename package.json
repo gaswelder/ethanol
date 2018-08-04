@@ -1,13 +1,13 @@
 {
-	"name": "eth-humans",
+	"name": "ethyl",
 	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
+	"description": "Humane wrapper around web3",
+	"main": "src/ethyl.js",
 	"scripts": {
 		"test": "tap tests"
 	},
 	"author": "gaswelder",
-	"license": "ISC",
+	"license": "MIT",
 	"dependencies": {
 		"eth-lightwallet": "^3.0.1",
 		"hooked-web3-provider": "^1.0.0",
