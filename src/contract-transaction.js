@@ -1,8 +1,8 @@
 const Transaction = require("./transaction");
 
 class ContractTransaction extends Transaction {
-	constructor(web3, hash, contract) {
-		super(web3, hash);
+	constructor(web3, hash, contract, comment) {
+		super(web3, hash, "contract call: " + comment);
 		this._contract = contract.handle(web3);
 	}
 

@@ -37,7 +37,7 @@ class User {
 			};
 			this._web3.eth.sendTransaction(tr, (err, hash) => {
 				if (err) return fail(err);
-				resolve(new Transaction(this._web3, hash));
+				resolve(new Transaction(this._web3, hash, "ether transfer"));
 			});
 		});
 	}
@@ -86,7 +86,7 @@ class User {
 				tr.gas = gas;
 				h[func].sendTransaction(...args, tr, (err, hash) => {
 					if (err) return fail(err);
-					ok(new ContractTransaction(this._web3, hash, contract));
+					ok(new ContractTransaction(this._web3, hash, contract, func));
 				});
 			});
 		});

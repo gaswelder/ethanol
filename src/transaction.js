@@ -3,7 +3,7 @@ const util = require("util");
 const sleep = ms => new Promise(ok => setTimeout(ok, ms));
 
 class Transaction {
-	constructor(web3, hash) {
+	constructor(web3, hash, comment) {
 		this._hash = hash;
 		this._web3 = web3;
 		this._getTransactionReceipt = util.promisify(
@@ -12,6 +12,7 @@ class Transaction {
 		this._getTransaction = util.promisify(
 			this._web3.eth.getTransaction.bind(this._web3.eth)
 		);
+		this._comment = comment;
 	}
 
 	async _receipt() {
@@ -42,7 +43,7 @@ class Transaction {
 			receipt.status = receipt.gasUsed < transaction.gas ? "0x1" : "0x0";
 		}
 		if (receipt.status == 0) {
-			const e = new Error("transaction failed");
+			const e = new Error("transaction failed: " + this._comment);
 			e.transactionReceipt = receipt;
 			throw e;
 		}
