@@ -85,9 +85,13 @@ class User {
 			const tr = {
 				from: this.address()
 			};
-			h[func].sendTransaction(...args, tr, (err, hash) => {
+			h[func].estimateGas(...args, tr, (err, gas) => {
 				if (err) return fail(err);
-				ok(new ContractTransaction(this._web3, hash, contract));
+				tr.gas = gas;
+				h[func].sendTransaction(...args, tr, (err, hash) => {
+					if (err) return fail(err);
+					ok(new ContractTransaction(this._web3, hash, contract));
+				});
 			});
 		});
 	}
