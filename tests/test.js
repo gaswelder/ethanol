@@ -7,15 +7,12 @@ tap.tearDown(function() {
 });
 
 tap.test("main", async function(t) {
+	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
 	const god = await root();
 	const alice = await user();
+	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
 
 	t.notEqual((await god.balance()).toString(), "0", "god has ether");
-	//t.equal((await alice.balance()).toString(), "0", "alice has no ether");
-
-	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
-
-	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
 
 	t.test("balances", async function(t) {
 		t.equal(
@@ -47,5 +44,60 @@ tap.test("main", async function(t) {
 			(await god.read(coin, "balanceOf", [alice.address()])).toString(),
 			"1"
 		);
+	});
+
+	t.test("approval", async function(t) {
+		const coin = await god.deploy(ERC20, [100, "Testcoin2", "TS2"]);
+		const bob = await user();
+		await god
+			.call(coin, "transfer", [alice.address(), 40])
+			.then(tr => tr.success());
+
+		t.equal(
+			(await alice.read(coin, "balanceOf", [alice.address()])).toString(),
+			"40"
+		);
+		t.equal(
+			(await bob.read(coin, "balanceOf", [bob.address()])).toString(),
+			"0"
+		);
+
+		t.test("fail without approval", async function(t) {
+			try {
+				await god
+					.call(coin, "transferFrom", [alice.address(), bob.address(), 5])
+					.then(tr => tr.success());
+				t.ok(false);
+			} catch (e) {
+				t.ok(true);
+			}
+		});
+
+		t.test("ok with approval", async function(t) {
+			await alice
+				.call(coin, "approve", [god.address(), 6])
+				.then(tr => tr.success());
+			t.equal(
+				(await god.read(coin, "allowance", [
+					alice.address(),
+					god.address()
+				])).toString(),
+				"6"
+			);
+			await god
+				.call(coin, "transferFrom", [alice.address(), bob.address(), 5])
+				.then(tr => tr.success());
+			t.equal(
+				(await god.read(coin, "allowance", [
+					alice.address(),
+					god.address()
+				])).toString(),
+				"1"
+			);
+			t.equal(
+				(await bob.read(coin, "balanceOf", [bob.address()])).toString(),
+				"5"
+			);
+		});
 	});
 });
