@@ -1,6 +1,7 @@
 const child_process = require("child_process");
 const fs = require("fs");
 const net = require("net");
+const path = require("path");
 const Web3 = require("web3");
 const User = require("./user");
 const Vault = require("./vault");
@@ -23,31 +24,24 @@ async function user() {
 	return new User(web3, web3._defaultAccount);
 }
 
-async function make(name) {
-	await build(name);
-	return {
-		abi: JSON.parse(fs.readFileSync(name + ".abi").toString()),
-		bin: "0x" + fs.readFileSync(name + ".bin").toString()
-	};
-}
-
-async function deploy(user, contractName, args = []) {
-	const { abi, bin } = await make(contractName);
+async function deploy(user, contractPath, args = []) {
+	const { abi, bin } = await build(contractPath);
 	return user.deploy(abi, bin, args);
 }
 
-async function build(name) {
-	try {
-		const s1 = fs.statSync(name + ".bin");
-		const s2 = fs.statSync(name + ".sol");
-		if (s2.mtimeMs < s1.mtimeMs) {
-			return;
-		}
-	} catch (e) {
-		//
-	}
-	console.log("building");
-	child_process.execSync("solc --abi --bin --overwrite -o . " + name + ".sol");
+async function build(contractPath) {
+	const dirname = "build";
+	const buildDir = path.join(dirname, path.dirname(contractPath));
+	child_process.execSync(
+		`solc --abi --bin --overwrite -o ${buildDir} ${contractPath}.sol`
+	);
+	return {
+		abi: JSON.parse(
+			fs.readFileSync(dirname + "/" + contractPath + ".abi").toString()
+		),
+		bin:
+			"0x" + fs.readFileSync(dirname + "/" + contractPath + ".bin").toString()
+	};
 }
 
 function getWeb3() {
