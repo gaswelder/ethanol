@@ -52,7 +52,7 @@ async function build(name) {
 
 function getWeb3() {
 	return new Promise(function(resolve) {
-		const path = "../data/geth.ipc";
+		const path = "./data/geth.ipc";
 		const provider = new Web3.providers.IpcProvider(path, net);
 		const web3 = new Web3(provider);
 		web3.eth.getAccounts(function(err, addrs) {
