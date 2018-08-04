@@ -21,9 +21,9 @@ class ContractTransaction extends Transaction {
 	async _getLogs(blockNumber, transactionHash) {
 		const event = this._contract.allEvents;
 		const filter = event({ fromBlock: blockNumber, toBlock: blockNumber });
-		return new Promise(ok => {
+		return new Promise((ok, fail) => {
 			filter.get(function(err, list) {
-				if (err) throw err;
+				if (err) return fail(err);
 
 				// A single block may have logs from the same contract, but
 				// different transactions.
