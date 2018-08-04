@@ -1,5 +1,5 @@
 const tap = require("tap");
-const { user, root } = require("../src/ethanol");
+const { user, root } = require("../src/ethyl");
 const ContractBlank = require("../src/contract-blank");
 
 tap.tearDown(function() {
