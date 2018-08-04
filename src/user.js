@@ -37,7 +37,17 @@ class User {
 		});
 	}
 
-	async deploy(abi, bin, args) {
+	/**
+	 * Deploys a contract.
+	 *
+	 * @param {object} abi Parse JSON interface
+	 * @param {string} bin String starting with '0x'
+	 * @param {array} args Contract constructor arguments
+	 */
+	async deploy(abi, bin, args = []) {
+		if (!abi) throw new Error("abi argument is missing");
+		if (!bin) throw new Error("bin argument is mising");
+		if (bin == "0x") throw new Error("invalid bin value: " + bin);
 		return new Promise(ok => {
 			this._web3.eth
 				.contract(abi)
