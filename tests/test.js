@@ -5,6 +5,12 @@ tap.tearDown(function() {
 	process.exit(0);
 });
 
+tap.test("users", async function(t) {
+	const alice = await user();
+	const bob = await user();
+	t.notEqual(alice.address(), bob.address());
+});
+
 tap.test("main", async function(t) {
 	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
 	const god = await root();

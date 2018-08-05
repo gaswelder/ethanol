@@ -1,48 +1,27 @@
-// const Mnemonic = require("bitcore-mnemonic");
-const EthWallet = require("eth-lightwallet");
 const HookedWeb3Provider = require("hooked-web3-provider");
 const Web3 = require("web3");
+const Mnemonic = require("./keys/mnemonic");
+const Web3Signer = require("./keys/web3-signer");
 
 const RPCAddr = "http://localhost:8545";
 
-const password = "it doesn't matter really";
 const mnemonic =
 	"science truck gospel alone trust effort scorpion laundry habit champion magic uncover";
 
 class Vault {
 	constructor() {
 		this._addresses = 0;
-		this._data = new Promise(resolve => {
-			EthWallet.keystore.createVault(
-				{
-					password,
-					seedPhrase: mnemonic,
-					hdPathString: "m/44'/60'/0'/0"
-				},
-				function(err, ks) {
-					if (err) throw err;
-					ks.passwordProvider = callback => {
-						callback(null, password);
-					};
-
-					ks.keyFromPassword(password, function(err, key) {
-						if (err) throw err;
-						resolve({ ks, key });
-					});
-				}
-			);
-		});
 	}
 
 	async makeWeb3() {
-		const { ks, key } = await this._data;
-		ks.generateNewAddress(key);
+		const m = new Mnemonic(mnemonic);
+		const key = m.deriveKey(this._addresses);
 		this._addresses++;
-		const addr = ks.getAddresses()[this._addresses - 1];
+		const addr = key.address();
 
 		const provider = new HookedWeb3Provider({
 			host: RPCAddr,
-			transaction_signer: ks
+			transaction_signer: new Web3Signer(key)
 		});
 		const web3 = new Web3(provider);
 		web3._defaultAccount = addr;
