@@ -33,6 +33,8 @@ function makeWeb3(url, options) {
 	throw new Error("unrecognized url: " + url);
 }
 
+let ipcPinger;
+
 function forIPC(path, options = {}) {
 	for (const k in options) {
 		throw new Error("unknown option for IPC: " + k);
@@ -46,6 +48,7 @@ function forIPC(path, options = {}) {
 			web3._defaultAccount = addrs[0];
 			resolve({ web3, address: addrs[0] });
 
+			if (ipcPinger) return;
 			// When working with geth --dev, the blocks are mined instantaneously
 			// and only when needed. Web3, naturally, fails to handle this case and
 			// sends the `eth_newBlockFilter` call too late, and transaction callbacks
@@ -59,7 +62,7 @@ function forIPC(path, options = {}) {
 					}
 				);
 			}
-			setInterval(ping, 1000);
+			ipcPinger = setInterval(ping, 1000);
 		});
 	});
 }
