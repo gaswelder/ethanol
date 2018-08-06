@@ -14,20 +14,29 @@ tap.test("users", async function(t) {
 	t.notEqual(alice.address(), bob.address());
 });
 
-tap.test("main", async function(t) {
+tap.test("ipc user", async function(t) {
+	const god = await user(ipc);
+	t.notEqual((await god.balance()).toString(), "0", "god has ether");
+});
+
+tap.test("ERC20", async function(t) {
 	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
 	const god = await user(ipc);
 	const alice = await user(rpc);
+	const bob = await user(rpc, { index: 2 });
+
 	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
 
-	t.notEqual((await god.balance()).toString(), "0", "god has ether");
+	tap.test("reading basic properties", async function(t) {
+		t.equal((await god.read(coin, "name")).toString(), "Testcoin");
+		t.equal((await god.read(coin, "symbol")).toString(), "TST");
+	});
 
 	t.test("balances", async function(t) {
 		t.equal(
 			(await god.read(coin, "balanceOf", [god.address()])).toString(),
 			"100000000000000000000"
 		);
-		t.equal((await god.read(coin, "name")).toString(), "Testcoin");
 		t.equal(
 			(await alice.read(coin, "balanceOf", [alice.address()])).toString(),
 			"0"
@@ -56,11 +65,9 @@ tap.test("main", async function(t) {
 
 	t.test("approval", async function(t) {
 		const coin = await god.deploy(ERC20, [100, "Testcoin2", "TS2"]);
-		const bob = await user(rpc, { index: 2 });
 		await god
 			.call(coin, "transfer", [alice.address(), 40])
 			.then(tr => tr.success());
-
 		t.equal(
 			(await alice.read(coin, "balanceOf", [alice.address()])).toString(),
 			"40"
