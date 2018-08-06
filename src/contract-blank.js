@@ -1,6 +1,9 @@
 const child_process = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const util = require("util");
+
+const readFile = util.promisify(fs.readFile);
 
 class ContractBlank {
 	constructor(abi, bin) {
@@ -16,13 +19,16 @@ class ContractBlank {
 		const cmd = `solc --abi --bin --overwrite -o ${buildDir} ${contractPath}.sol`;
 		console.log(cmd);
 		child_process.execSync(cmd);
-		return {
-			abi: JSON.parse(
-				fs.readFileSync(dirname + "/" + contractPath + ".abi").toString()
-			),
-			bin:
-				"0x" + fs.readFileSync(dirname + "/" + contractPath + ".bin").toString()
-		};
+		return this.loadFrom(
+			dirname + "/" + contractPath + ".abi",
+			dirname + "/" + contractPath + ".bin"
+		);
+	}
+
+	static async loadFrom(abiPath, binPath) {
+		const abi = JSON.parse((await readFile(abiPath)).toString());
+		const bin = "0x" + (await readFile(binPath)).toString();
+		return new ContractBlank(abi, bin);
 	}
 }
 
