@@ -12,6 +12,11 @@ class User {
 		return this._addr;
 	}
 
+	/**
+	 * Returns balance of this user in Wei.
+	 *
+	 * @returns {BigNumber}
+	 */
 	async balance() {
 		const addr = this.address();
 		return new Promise((ok, fail) => {
