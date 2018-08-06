@@ -40,9 +40,14 @@ class User {
 				to: user.address(),
 				value: amount
 			};
-			this._web3.eth.sendTransaction(tr, (err, hash) => {
+			this._web3.eth.estimateGas(tr, (err, gas) => {
 				if (err) return fail(err);
-				resolve(new Transaction(this._web3, hash, "ether transfer"));
+				// See comments in the contract call function.
+				tr.gas = gas + 100;
+				this._web3.eth.sendTransaction(tr, (err, hash) => {
+					if (err) return fail(err);
+					resolve(new Transaction(this._web3, hash, "ether transfer"));
+				});
 			});
 		});
 	}

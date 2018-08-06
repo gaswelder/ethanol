@@ -19,6 +19,13 @@ tap.test("ipc user", async function(t) {
 	t.notEqual((await god.balance()).toString(), "0", "god has ether");
 });
 
+tap.test("eth transfer", async function(t) {
+	const god = await user(ipc);
+	const alice = await user(rpc, { index: 0 });
+	const r = god.give(alice, 1).then(tr => tr.success());
+	t.resolves(r);
+});
+
 tap.test("ERC20", async function(t) {
 	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
 	const god = await user(ipc);
