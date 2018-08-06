@@ -88,7 +88,12 @@ class User {
 			};
 			h[func].estimateGas(...args, tr, (err, gas) => {
 				if (err) return fail(err);
-				tr.gas = gas;
+				// On pre-byzantium we have to check if all gas was used to determine
+				// whether the transaction had thrown. If we allow the exact amount of
+				// gas, we will most likely get a false positive. To avoid, give a little
+				// more gas than needed.
+				tr.gas = gas + 100;
+
 				h[func].sendTransaction(...args, tr, (err, hash) => {
 					if (err) return fail(err);
 					ok(new ContractTransaction(this._web3, hash, contract, func));
