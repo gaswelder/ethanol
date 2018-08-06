@@ -1,20 +1,23 @@
 const tap = require("tap");
-const { user, root, ContractBlank } = require("../src/ethyl");
+const { user, ContractBlank } = require("../src/ethyl");
 
 tap.tearDown(function() {
 	process.exit(0);
 });
 
+const ipc = "ipc://./data/geth.ipc";
+const rpc = "http://localhost:8545";
+
 tap.test("users", async function(t) {
-	const alice = await user();
-	const bob = await user();
+	const alice = await user(rpc, { index: 0 });
+	const bob = await user(rpc, { index: 1 });
 	t.notEqual(alice.address(), bob.address());
 });
 
 tap.test("main", async function(t) {
 	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
-	const god = await root();
-	const alice = await user();
+	const god = await user(ipc);
+	const alice = await user(rpc);
 	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
 
 	t.notEqual((await god.balance()).toString(), "0", "god has ether");
@@ -53,7 +56,7 @@ tap.test("main", async function(t) {
 
 	t.test("approval", async function(t) {
 		const coin = await god.deploy(ERC20, [100, "Testcoin2", "TS2"]);
-		const bob = await user();
+		const bob = await user(rpc, { index: 2 });
 		await god
 			.call(coin, "transfer", [alice.address(), 40])
 			.then(tr => tr.success());
