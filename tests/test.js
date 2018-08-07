@@ -26,6 +26,16 @@ tap.test("eth transfer", async function(t) {
 	t.resolves(r);
 });
 
+tap.test("compiler options", async function(t) {
+	const a = await ContractBlank.buildFrom("tests/TokenERC20", {
+		"evm-version": "spuriousDragon"
+	});
+	const b = await ContractBlank.buildFrom("tests/TokenERC20", {
+		"evm-version": "byzantium"
+	});
+	t.notEqual(a.bin, b.bin);
+});
+
 tap.test("ERC20", async function(t) {
 	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
 	const god = await user(ipc);

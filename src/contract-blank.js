@@ -13,10 +13,19 @@ class ContractBlank {
 		Object.assign(this, { abi, bin });
 	}
 
-	static async buildFrom(contractPath) {
+	static async buildFrom(contractPath, options = {}) {
 		const dirname = "build";
 		const buildDir = path.join(dirname, path.dirname(contractPath));
-		const cmd = `solc --abi --bin --overwrite -o ${buildDir} ${contractPath}.sol`;
+		const cmd = [
+			"solc --abi --bin --overwrite",
+			Object.entries(options)
+				.map(([k, v]) => `--${k} ${v}`)
+				.join(" "),
+			`-o ${buildDir} ${contractPath}.sol`
+		]
+			.filter(x => x.length > 0)
+			.join(" ");
+
 		console.log(cmd);
 		child_process.execSync(cmd);
 		return this.loadFrom(
