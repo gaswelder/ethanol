@@ -1,4 +1,4 @@
-class Contract {
+class DeployedContract {
 	constructor(abi, addr) {
 		this._abi = abi;
 		this._addr = addr;
@@ -13,4 +13,4 @@ class Contract {
 	}
 }
 
-module.exports = Contract;
+module.exports = DeployedContract;

@@ -2,6 +2,7 @@ const child_process = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const util = require("util");
+const DeployedContract = require("./deployed-contract");
 
 const readFile = util.promisify(fs.readFile);
 
@@ -11,6 +12,10 @@ class ContractBlank {
 		if (!bin) throw new Error("bin argument is mising");
 		if (bin == "0x") throw new Error("invalid bin value: " + bin);
 		Object.assign(this, { abi, bin });
+	}
+
+	at(address) {
+		return new DeployedContract(this.abi, address);
 	}
 
 	static async buildFrom(contractPath, options = {}) {

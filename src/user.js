@@ -1,6 +1,6 @@
 const Transaction = require("./transaction");
 const ContractTransaction = require("./contract-transaction");
-const Contract = require("./contract");
+const DeployedContract = require("./deployed-contract");
 
 class User {
 	constructor(web3, addr) {
@@ -57,6 +57,7 @@ class User {
 	 *
 	 * @param {ContractBlank} contractBlank Contract definition.
 	 * @param {array} args Contract constructor arguments
+	 * @returns {DeployedContract}
 	 */
 	async deploy(blankContract, args = []) {
 		return new Promise((ok, fail) => {
@@ -68,7 +69,7 @@ class User {
 					function(err, contract) {
 						if (err) return fail(err);
 						if (contract.address) {
-							ok(new Contract(blankContract.abi, contract.address));
+							ok(new DeployedContract(blankContract.abi, contract.address));
 						}
 					}
 				);
