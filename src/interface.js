@@ -1,5 +1,4 @@
 const fs = require("fs");
-const DeployedContract = require("./deployed-contract");
 
 /**
  * Interface reprecents a contract's ABI definition.
@@ -23,16 +22,6 @@ class Interface {
 				resolve(new Interface(JSON.parse(data)));
 			});
 		});
-	}
-
-	/**
-	 * Returns a handle to a deployed contract with this interface.
-	 *
-	 * @param {string} contractAddress
-	 * @returns {DeployedContract}
-	 */
-	at(contractAddress) {
-		return new DeployedContract(this.abi, contractAddress);
 	}
 }
 

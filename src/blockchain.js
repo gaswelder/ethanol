@@ -4,6 +4,7 @@ const Web3 = require("web3");
 const User = require("./user");
 const Mnemonic = require("./keys/mnemonic");
 const Web3Signer = require("./keys/web3-signer");
+const DeployedContract = require("./deployed-contract");
 
 class Blockchain {
 	constructor(url) {
@@ -18,6 +19,10 @@ class Blockchain {
 	 */
 	async user(options) {
 		throw new Error("hmm");
+	}
+
+	contract(abi, address) {
+		return new DeployedContract(abi, address, this);
 	}
 
 	/**
@@ -97,7 +102,7 @@ class RemoteBlockchain extends Blockchain {
 			transaction_signer: new Web3Signer(key)
 		});
 		const web3 = new Web3(provider);
-		return new User(web3, addr);
+		return new User(web3, addr, this);
 	}
 }
 
@@ -119,7 +124,7 @@ class LocalBlockchain extends Blockchain {
 			const web3 = new Web3(provider);
 			web3.eth.getAccounts((err, addrs) => {
 				if (err) return fail(err);
-				resolve(new User(web3, addrs[0]));
+				resolve(new User(web3, addrs[0], this));
 				this.startPinger(web3, addrs[0]);
 			});
 		});

@@ -52,6 +52,19 @@ tap.test("compiler options", async function(t) {
 	t.notEqual(a.bin, b.bin);
 });
 
+tap.test("contract logs", async function(t) {
+	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
+	const god = await local.user();
+	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
+	await god.call(coin, "transfer", ["0x123", 1]).then(tr => tr.success());
+
+	const logs = await coin.history("Transfer", 0, 10000);
+	t.equal(logs.length, 1);
+	const args = logs[0].args;
+	t.equal(args.from, god.address());
+	t.ok(args.value.eq(1));
+});
+
 tap.test("ERC20", async function(t) {
 	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
 	const god = await local.user();
