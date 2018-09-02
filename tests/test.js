@@ -19,6 +19,11 @@ tap.test("block number", async function(t) {
 	t.ok(n1 === n2, "Same block number");
 });
 
+tap.test("block retrieval", async function(t) {
+	const block = await local.block(1);
+	t.type(block, "object");
+});
+
 tap.test("users", async function(t) {
 	const alice = await remote.user({ index: 0 });
 	const bob = await remote.user({ index: 1 });

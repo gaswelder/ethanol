@@ -41,12 +41,28 @@ class Blockchain {
 	 *
 	 * @returns {Promise<Number>}
 	 */
-	async blockNumber() {
+	blockNumber() {
 		const web3 = this.web3();
 		return new Promise(function(ok, fail) {
 			web3.eth.getBlockNumber(function(err, val) {
 				if (err) return fail(err);
 				ok(val);
+			});
+		});
+	}
+
+	/**
+	 * Returns a block with the given number.
+	 *
+	 * @param {Number} blockNumber
+	 * @returns {Promise<object>}
+	 */
+	block(blockNumber) {
+		const web3 = this.web3();
+		return new Promise(function(ok, fail) {
+			web3.eth.getBlock(blockNumber, true, function(err, block) {
+				if (err) return fail(err);
+				ok(block);
 			});
 		});
 	}
