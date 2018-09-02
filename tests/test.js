@@ -1,5 +1,6 @@
 const tap = require("tap");
-const { user, ContractBlank } = require("../src/ethyl");
+const { ContractBlank } = require("../src/ethyl");
+const ethyl = require("../src/index");
 
 tap.tearDown(function() {
 	process.exit(0);
@@ -8,20 +9,30 @@ tap.tearDown(function() {
 const ipc = "ipc://./data/geth.ipc";
 const rpc = "http://localhost:8545";
 
+const local = ethyl.Blockchain.at(ipc);
+const remote = ethyl.Blockchain.at(rpc);
+
+tap.test("block number", async function(t) {
+	const n1 = await local.blockNumber();
+	const n2 = await remote.blockNumber();
+	t.ok(n1 > 0, "Non-zero block number");
+	t.ok(n1 === n2, "Same block number");
+});
+
 tap.test("users", async function(t) {
-	const alice = await user(rpc, { index: 0 });
-	const bob = await user(rpc, { index: 1 });
+	const alice = await remote.user({ index: 0 });
+	const bob = await remote.user({ index: 1 });
 	t.notEqual(alice.address(), bob.address());
 });
 
 tap.test("ipc user", async function(t) {
-	const god = await user(ipc);
+	const god = await local.user();
 	t.notEqual((await god.balance()).toString(), "0", "god has ether");
 });
 
 tap.test("eth transfer", async function(t) {
-	const god = await user(ipc);
-	const alice = await user(rpc, { index: 0 });
+	const god = await local.user();
+	const alice = await remote.user({ index: 0 });
 	const r = god.give(alice, 1).then(tr => tr.success());
 	t.resolves(r);
 });
@@ -38,9 +49,9 @@ tap.test("compiler options", async function(t) {
 
 tap.test("ERC20", async function(t) {
 	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
-	const god = await user(ipc);
-	const alice = await user(rpc);
-	const bob = await user(rpc, { index: 2 });
+	const god = await local.user();
+	const alice = await remote.user();
+	const bob = await remote.user({ index: 2 });
 
 	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
 

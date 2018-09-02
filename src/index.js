@@ -1,7 +1,7 @@
-const { user, ContractBlank } = require("./ethyl");
+const { ContractBlank } = require("./ethyl");
 
 module.exports = {
-	user,
 	ContractBlank,
+	Blockchain: require("./blockchain"),
 	Interface: require("./interface")
 };
