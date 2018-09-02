@@ -18,22 +18,7 @@ class User {
 	 * @returns {Promise<BigNumber>}
 	 */
 	async balance() {
-		return this.balanceOf(this.address());
-	}
-
-	/**
-	 * Returns balance of the given address in Wei.
-	 *
-	 * @param {string} addr Wallet address
-	 * @returns {Promise<BigNumber>}
-	 */
-	async balanceOf(addr) {
-		return new Promise((ok, fail) => {
-			this._web3.eth.getBalance(addr, function(err, bal) {
-				if (err) return fail(err);
-				ok(bal);
-			});
-		});
+		return this._bc.balanceOf(this.address());
 	}
 
 	/**

@@ -42,6 +42,22 @@ class Blockchain {
 	}
 
 	/**
+	 * Returns balance of the given address in Wei.
+	 *
+	 * @param {string} addr Wallet address
+	 * @returns {Promise<BigNumber>}
+	 */
+	balanceOf(addr) {
+		const web3 = this.web3();
+		return new Promise((ok, fail) => {
+			web3.eth.getBalance(addr, function(err, bal) {
+				if (err) return fail(err);
+				ok(bal);
+			});
+		});
+	}
+
+	/**
 	 * Returns current block number.
 	 *
 	 * @returns {Promise<Number>}
