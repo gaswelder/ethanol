@@ -1,6 +1,4 @@
-const { ContractBlank } = require("./ethyl");
-
 module.exports = {
-	ContractBlank,
+	ContractBlank: require("./contract-blank"),
 	Blockchain: require("./blockchain")
 };
