@@ -1,41 +1,13 @@
-const util = require("util");
-
-const sleep = ms => new Promise(ok => setTimeout(ok, ms));
-
 class Transaction {
 	constructor(web3, hash, comment) {
 		this._hash = hash;
 		this._web3 = web3;
-		this._getTransactionReceipt = util.promisify(
-			this._web3.eth.getTransactionReceipt.bind(this._web3.eth)
-		);
-		this._getTransaction = util.promisify(
-			this._web3.eth.getTransaction.bind(this._web3.eth)
-		);
 		this._comment = comment;
 	}
 
-	async _receipt() {
-		for (;;) {
-			const r = await this._getTransactionReceipt(this._hash);
-			if (r) return r;
-			await sleep(1000);
-		}
-	}
-
-	async _transaction() {
-		for (;;) {
-			const transaction = await this._getTransaction(this._hash);
-			if (transaction.blockNumber) {
-				return transaction;
-			}
-			await sleep(1000);
-		}
-	}
-
 	async receipt() {
-		const transaction = await this._transaction();
-		const receipt = await this._receipt();
+		const transaction = await getTransaction(this._web3, this._hash);
+		const receipt = await getTransactionReceipt(this._web3, this._hash);
 
 		// If status is not provided (we are no not on a byzantium chain),
 		// determine failure by gas consumption.
@@ -53,6 +25,38 @@ class Transaction {
 	async success() {
 		await this.receipt();
 	}
+}
+
+function getTransactionReceipt(web3, hash) {
+	return new Promise(ok => {
+		function loop() {
+			web3.eth.getTransactionReceipt(hash, (err, receipt) => {
+				if (err) throw err;
+				if (receipt) {
+					ok(receipt);
+					return;
+				}
+				setTimeout(loop, 1000);
+			});
+		}
+		loop();
+	});
+}
+
+function getTransaction(web3, hash) {
+	return new Promise(ok => {
+		function loop() {
+			web3.eth.getTransaction(hash, (err, transaction) => {
+				if (err) throw err;
+				if (transaction.blockNumber) {
+					ok(transaction);
+					return;
+				}
+				setTimeout(loop, 1000);
+			});
+		}
+		loop();
+	});
 }
 
 module.exports = Transaction;

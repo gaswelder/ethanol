@@ -11,27 +11,27 @@ class ContractTransaction extends Transaction {
 
 		// The receipt has logs in the binary form, so we have to use
 		// the filter query.
-		const logs = await this._getLogs(
+		return getLogs(
+			this._contract,
 			receipt.blockNumber,
 			receipt.transactionHash
 		);
-		return logs;
 	}
+}
 
-	async _getLogs(blockNumber, transactionHash) {
-		const event = this._contract.allEvents;
-		const filter = event({ fromBlock: blockNumber, toBlock: blockNumber });
-		return new Promise((ok, fail) => {
-			filter.get(function(err, list) {
-				if (err) return fail(err);
+function getLogs(contract, blockNumber, transactionHash) {
+	const event = contract.allEvents;
+	const filter = event({ fromBlock: blockNumber, toBlock: blockNumber });
+	return new Promise((ok, fail) => {
+		filter.get(function(err, list) {
+			if (err) return fail(err);
 
-				// A single block may have logs from the same contract, but
-				// different transactions.
-				const logs = list.filter(l => l.transactionHash == transactionHash);
-				ok(logs);
-			});
+			// A single block may have logs from the same contract, but
+			// different transactions.
+			const logs = list.filter(l => l.transactionHash == transactionHash);
+			ok(logs);
 		});
-	}
+	});
 }
 
 module.exports = ContractTransaction;
