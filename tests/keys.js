@@ -1,6 +1,6 @@
 const tap = require("tap");
 
-const Mnemonic = require("./mnemonic");
+const Mnemonic = require("../src/keys/mnemonic");
 
 tap.test(async function(t) {
 	const m = new Mnemonic(

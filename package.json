@@ -4,7 +4,7 @@
 	"description": "Humane wrapper around web3",
 	"main": "src/ethyl.js",
 	"scripts": {
-		"test": "tap tests src/keys/test.js"
+		"test": "tap tests"
 	},
 	"author": "gaswelder",
 	"license": "MIT",
