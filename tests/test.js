@@ -1,6 +1,5 @@
 const tap = require("tap");
-const { ContractBlank } = require("../src/ethyl");
-const ethyl = require("../src/index");
+const { Compiler, Blockchain } = require("../src");
 
 tap.tearDown(function() {
 	process.exit(0);
@@ -9,8 +8,8 @@ tap.tearDown(function() {
 const ipc = "ipc://./data/geth.ipc";
 const rpc = "http://localhost:8545";
 
-const local = ethyl.Blockchain.at(ipc);
-const remote = ethyl.Blockchain.at(rpc);
+const local = Blockchain.at(ipc);
+const remote = Blockchain.at(rpc);
 
 tap.test("block number", async function(t) {
 	const n1 = await local.blockNumber();
@@ -43,17 +42,17 @@ tap.test("eth transfer", async function(t) {
 });
 
 tap.test("compiler options", async function(t) {
-	const a = await ContractBlank.buildFrom("tests/TokenERC20", {
-		"evm-version": "spuriousDragon"
-	});
-	const b = await ContractBlank.buildFrom("tests/TokenERC20", {
-		"evm-version": "byzantium"
-	});
-	t.notEqual(a.bin, b.bin);
+	const a = new Compiler({ "evm-version": "spuriousDragon" });
+	const b = new Compiler({ "evm-version": "byzantium" });
+	const path = "tests/TokenERC20";
+	const image1 = await a.compile(path);
+	const image2 = await b.compile(path);
+	t.notEqual(image1.bin, image2.bin);
 });
 
 tap.test("contract logs", async function(t) {
-	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
+	const comp = new Compiler();
+	const ERC20 = await comp.compile("tests/TokenERC20");
 	const god = await local.user();
 	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
 	await god.call(coin, "transfer", ["0x123", 1]).then(tr => tr.success());
@@ -66,7 +65,8 @@ tap.test("contract logs", async function(t) {
 });
 
 tap.test("ERC20", async function(t) {
-	const ERC20 = await ContractBlank.buildFrom("tests/TokenERC20");
+	const comp = new Compiler();
+	const ERC20 = await comp.compile("tests/TokenERC20");
 	const god = await local.user();
 	const alice = await remote.user();
 	const bob = await remote.user({ index: 2 });

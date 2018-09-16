@@ -1,4 +1,4 @@
 module.exports = {
-	ContractBlank: require("./contract-blank"),
-	Blockchain: require("./blockchain")
+	Blockchain: require("./blockchain"),
+	Compiler: require("./compiler")
 };
