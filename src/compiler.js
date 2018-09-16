@@ -4,9 +4,11 @@ const path = require("path");
 const util = require("util");
 
 const readFile = util.promisify(fs.readFile);
+const rmdir = util.promisify(fs.rmdir);
+const mkdtemp = util.promisify(fs.mkdtemp);
 const exec = util.promisify(child_process.exec);
-
-const dirname = "build";
+const readdir = util.promisify(fs.readdir);
+const unlink = util.promisify(fs.unlink);
 
 class Compiler {
 	constructor(options = {}) {
@@ -20,19 +22,22 @@ class Compiler {
 	 * @returns {Promise<Object>} Object with `bin` and `abi` fields.
 	 */
 	async compile(contractPath) {
-		const cmd = this.commandLine(contractPath);
-		console.log(cmd);
-
+		const dirname = await mkdtemp("ethanol-");
+		const cmd = this.commandLine(contractPath, dirname);
 		await exec(cmd);
-		return image(
-			dirname + "/" + contractPath + ".abi",
-			dirname + "/" + contractPath + ".bin"
+
+		const contractName = path.basename(contractPath);
+		const data = await image(
+			dirname + "/" + contractName + ".abi",
+			dirname + "/" + contractName + ".bin"
 		);
+
+		await clean(dirname);
+		rmdir(dirname);
+		return data;
 	}
 
-	commandLine(contractPath) {
-		const dirname = "build";
-		const buildDir = path.join(dirname, path.dirname(contractPath));
+	commandLine(contractPath, buildDir) {
 		const cmd = [
 			"solc --abi --bin --overwrite",
 			Object.entries(this.options)
@@ -45,6 +50,12 @@ class Compiler {
 
 		return cmd;
 	}
+}
+
+async function clean(dir) {
+	const files = await readdir(dir);
+	const deletions = files.map(filename => unlink(path.join(dir, filename)));
+	return Promise.all(deletions);
 }
 
 async function image(abiPath, binPath) {

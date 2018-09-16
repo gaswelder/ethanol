@@ -45,8 +45,10 @@ tap.test("compiler options", async function(t) {
 	const a = new Compiler({ "evm-version": "spuriousDragon" });
 	const b = new Compiler({ "evm-version": "byzantium" });
 	const path = "tests/TokenERC20";
-	const image1 = await a.compile(path);
-	const image2 = await b.compile(path);
+	const [image1, image2] = await Promise.all([
+		a.compile(path),
+		b.compile(path)
+	]);
 	t.notEqual(image1.bin, image2.bin);
 });
 
