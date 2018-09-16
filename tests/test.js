@@ -50,16 +50,18 @@ tap.test("compiler options", async function(t) {
 	t.notEqual(image1.bin, image2.bin);
 });
 
-tap.test("contract logs", async function(t) {
+tap.test("contract functions", async function(t) {
 	const comp = new Compiler();
 	const ERC20 = await comp.compile("tests/TokenERC20");
 	const god = await local.user();
 	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
-	await god.call(coin, "transfer", ["0x123", 1]).then(tr => tr.success());
 
-	const logs = await coin.history("Transfer", 0, 10000);
-	t.equal(logs.length, 1);
-	const args = logs[0].args;
-	t.equal(args.from, god.address());
-	t.ok(args.value.eq(1));
+	t.test("contract logs", async function(t) {
+		await god.call(coin, "transfer", ["0x123", 1]).then(tr => tr.success());
+		const logs = await coin.history("Transfer", 0, 10000);
+		t.equal(logs.length, 1);
+		const args = logs[0].args;
+		t.equal(args.from, god.address());
+		t.ok(args.value.eq(1));
+	});
 });
