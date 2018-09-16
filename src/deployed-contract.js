@@ -1,3 +1,5 @@
+const ContractTransaction = require("./contract-transaction");
+
 class DeployedContract {
 	constructor(abi, addr, bc) {
 		this._abi = abi;
@@ -11,6 +13,22 @@ class DeployedContract {
 
 	handle(web3) {
 		return web3.eth.contract(this._abi).at(this._addr);
+	}
+
+	/**
+	 * Returns a transaction object representing an existing call for this contract.
+	 *
+	 * @param {string} hash Hash code of the transaction
+	 * @param {string} comment Transaction's description for display purposes
+	 * @returns {Promise<ContractTransaction>}
+	 */
+	async transaction(hash, comment = "") {
+		const tr = new ContractTransaction(this._bc.web3(), hash, this, comment);
+		const receipt = await tr.receipt();
+		if (receipt.to != this._addr) {
+			throw new Error("transaction belongs to another contract");
+		}
+		return tr;
 	}
 
 	/**

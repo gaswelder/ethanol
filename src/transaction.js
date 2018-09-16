@@ -5,6 +5,15 @@ class Transaction {
 		this._comment = comment;
 	}
 
+	/**
+	 * Returns the transaction's hash code.
+	 *
+	 * @returns {string}
+	 */
+	hash() {
+		return this._hash;
+	}
+
 	async receipt() {
 		const transaction = await getTransaction(this._web3, this._hash);
 		const receipt = await getTransactionReceipt(this._web3, this._hash);
@@ -50,10 +59,13 @@ function getTransactionReceipt(web3, hash) {
 }
 
 function getTransaction(web3, hash) {
-	return new Promise(ok => {
+	return new Promise((ok, fail) => {
 		function loop() {
 			web3.eth.getTransaction(hash, (err, transaction) => {
-				if (err) throw err;
+				if (err) return fail(err);
+				if (!transaction) {
+					return fail(new Error("unknown transaction: " + hash));
+				}
 				if (transaction.blockNumber) {
 					ok(transaction);
 					return;
