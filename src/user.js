@@ -81,6 +81,14 @@ class User {
 		});
 	}
 
+	/**
+	 * Makes a contract function call from the user's accout.
+	 *
+	 * @param {DeployedContract} contract
+	 * @param {string} func Name of the function to call
+	 * @param {array} args Arguments for the function
+	 * @returns {Promise<ContractTransaction>}
+	 */
 	call(contract, func, args = []) {
 		return new Promise((ok, fail) => {
 			const h = contract.handle(this._web3);
