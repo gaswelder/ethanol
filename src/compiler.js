@@ -23,7 +23,7 @@ class Compiler {
 	 */
 	async compile(contractPath) {
 		const dirname = await mkdtemp("ethanol-");
-		const cmd = this.commandLine(contractPath, dirname);
+		const cmd = commandLine(contractPath, dirname, this.options);
 		await exec(cmd);
 
 		const contractName = path.basename(contractPath);
@@ -36,20 +36,20 @@ class Compiler {
 		rmdir(dirname);
 		return data;
 	}
+}
 
-	commandLine(contractPath, buildDir) {
-		const cmd = [
-			"solc --abi --bin --overwrite",
-			Object.entries(this.options)
-				.map(([k, v]) => `--${k} ${v}`)
-				.join(" "),
-			`-o ${buildDir} ${contractPath}.sol`
-		]
-			.filter(x => x.length > 0)
-			.join(" ");
+function commandLine(contractPath, buildDir, options) {
+	const cmd = [
+		"solc --abi --bin --overwrite",
+		Object.entries(options)
+			.map(([k, v]) => `--${k} ${v}`)
+			.join(" "),
+		`-o ${buildDir} ${contractPath}.sol`
+	]
+		.filter(x => x.length > 0)
+		.join(" ");
 
-		return cmd;
-	}
+	return cmd;
 }
 
 async function clean(dir) {
