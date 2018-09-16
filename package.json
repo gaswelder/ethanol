@@ -1,8 +1,8 @@
 {
-	"name": "ethyl",
+	"name": "ethanol",
 	"version": "0.2.0",
 	"description": "Humane wrapper around web3",
-	"main": "src/ethyl.js",
+	"main": "src/index.js",
 	"scripts": {
 		"test": "tap tests"
 	},
