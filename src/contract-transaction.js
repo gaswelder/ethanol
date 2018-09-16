@@ -6,6 +6,11 @@ class ContractTransaction extends Transaction {
 		this._contract = contract.handle(web3);
 	}
 
+	/**
+	 * Returns this transaction's logs.
+	 *
+	 * @returns {Promise<array>}
+	 */
 	async logs() {
 		const receipt = await this.receipt();
 

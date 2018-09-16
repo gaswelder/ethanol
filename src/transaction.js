@@ -22,6 +22,12 @@ class Transaction {
 		return receipt;
 	}
 
+	/**
+	 * Returns a promise for this transaction's successful mining.
+	 * If the transaction fails, the promise is rejected.
+	 *
+	 * @returns {Promise<void>}
+	 */
 	async success() {
 		await this.receipt();
 	}
