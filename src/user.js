@@ -74,6 +74,9 @@ class User {
 	read(contract, func, args = []) {
 		return new Promise((ok, fail) => {
 			const h = contract.handle(this._web3);
+			if (!h[func]) {
+				throw new Error("Undefined contract function: " + func);
+			}
 			h[func].call(...args, (err, result) => {
 				if (err) return fail(err);
 				ok(result);
