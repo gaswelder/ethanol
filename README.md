@@ -155,3 +155,8 @@ const transaction = await contract.transaction("0x1234abcd...");
 ```
 
 The contract is necessary because it provides context (like an ABI definition) to the transaction so that the logs function will work. The `transaction` function will also verify the the transaction exists and belongs to the same contract.
+
+## Running the tests
+
+Execute `yarn test` or `npm test`.
+The tests require both `geth` and `solc` to be installed.

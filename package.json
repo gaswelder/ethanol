@@ -4,7 +4,7 @@
 	"description": "Humane wrapper around web3",
 	"main": "src/index.js",
 	"scripts": {
-		"test": "tap tests"
+		"test": "./test.sh"
 	},
 	"author": "gaswelder",
 	"homepage": "https://github.com/gaswelder/ethanol",
