@@ -1,7 +1,7 @@
 {
 	"name": "ethanol",
-	"version": "0.2.0",
-	"description": "Humane wrapper around web3",
+	"version": "0.3.0",
+	"description": "Humane wrappers around web3",
 	"main": "src/index.js",
 	"scripts": {
 		"test": "./test.sh"
