@@ -5,5 +5,5 @@ pid=$!
 
 yarn run tap tests
 
-kill $!
-wait $!
+kill $pid
+wait $pid
