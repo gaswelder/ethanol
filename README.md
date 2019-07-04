@@ -159,5 +159,5 @@ const image = await com.compile("hello-world.sol");
 
 ## Running the tests
 
-Execute `yarn test` or `npm test`.
+Execute `yarn test`.
 The tests require both `geth` and `solc` to be installed.
