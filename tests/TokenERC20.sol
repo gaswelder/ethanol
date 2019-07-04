@@ -1,34 +1,27 @@
-// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
-// https://ethereum.org/token#proof-of-work
-
-pragma solidity ^0.4.16;
+// https://github.com/ethereum/ethereum-org/blob/master/solidity/token-erc20.sol
+pragma solidity >=0.4.22 <0.6.0;
 
 interface tokenRecipient {
-    function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) external;
+    function receiveApproval(address _from, uint256 _value, address _token, bytes calldata _extraData) external;
 }
 
 contract TokenERC20 {
-    // Name of the token (e.g. "MyToken")
+    // Public variables of the token
     string public name;
-
-	// Token symbol (e.g. MTK)
     string public symbol;
-
-	// the number of decimals - e.g. 8 means to divide the token amount by 100000000 to get its user representation.
-	// 18 decimals is the suggested default
     uint8 public decimals = 18;
-
-	// How many tokens there are in the world.
+    // 18 decimals is the strongly suggested default, avoid changing it
     uint256 public totalSupply;
 
-    // Balance for everybody.
+    // This creates an array with all balances
     mapping (address => uint256) public balanceOf;
-
     mapping (address => mapping (address => uint256)) public allowance;
 
-    // This generates public events on the blockchain that will notify clients
+    // This generates a public event on the blockchain that will notify clients
     event Transfer(address indexed from, address indexed to, uint256 value);
-    event TransferWithNote(address indexed from, address indexed to, uint256 value, string message);
+
+    // This generates a public event on the blockchain that will notify clients
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     // This notifies clients about the amount burnt
     event Burn(address indexed from, uint256 value);
@@ -40,10 +33,9 @@ contract TokenERC20 {
      */
     constructor(
         uint256 initialSupply,
-        string tokenName,
-        string tokenSymbol
-    ) public
-	{
+        string memory tokenName,
+        string memory tokenSymbol
+    ) public {
         totalSupply = initialSupply * 10 ** uint256(decimals);  // Update total supply with the decimal amount
         balanceOf[msg.sender] = totalSupply;                // Give the creator all initial tokens
         name = tokenName;                                   // Set the name for display purposes
@@ -55,21 +47,18 @@ contract TokenERC20 {
      */
     function _transfer(address _from, address _to, uint _value) internal {
         // Prevent transfer to 0x0 address. Use burn() instead
-        require(_to != 0x0);
+        require(_to != address(0x0));
         // Check if the sender has enough
         require(balanceOf[_from] >= _value);
         // Check for overflows
-        require(balanceOf[_to] + _value > balanceOf[_to]);
+        require(balanceOf[_to] + _value >= balanceOf[_to]);
         // Save this for an assertion in the future
         uint previousBalances = balanceOf[_from] + balanceOf[_to];
         // Subtract from the sender
         balanceOf[_from] -= _value;
         // Add the same to the recipient
         balanceOf[_to] += _value;
-
-        // Send the standard Transfer event to keep ERC20 compatibility.
         emit Transfer(_from, _to, _value);
-
         // Asserts are used to use static analysis to find bugs in your code. They should never fail
         assert(balanceOf[_from] + balanceOf[_to] == previousBalances);
     }
@@ -82,8 +71,9 @@ contract TokenERC20 {
      * @param _to The address of the recipient
      * @param _value the amount to send
      */
-    function transfer(address _to, uint256 _value) public {
+    function transfer(address _to, uint256 _value) public returns (bool success) {
         _transfer(msg.sender, _to, _value);
+        return true;
     }
 
     /**
@@ -113,6 +103,7 @@ contract TokenERC20 {
     function approve(address _spender, uint256 _value) public
         returns (bool success) {
         allowance[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -125,12 +116,12 @@ contract TokenERC20 {
      * @param _value the max amount they can spend
      * @param _extraData some extra information to send to the approved contract
      */
-    function approveAndCall(address _spender, uint256 _value, bytes _extraData)
+    function approveAndCall(address _spender, uint256 _value, bytes memory _extraData)
         public
         returns (bool success) {
         tokenRecipient spender = tokenRecipient(_spender);
         if (approve(_spender, _value)) {
-            spender.receiveApproval(msg.sender, _value, this, _extraData);
+            spender.receiveApproval(msg.sender, _value, address(this), _extraData);
             return true;
         }
     }
