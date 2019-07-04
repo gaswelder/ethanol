@@ -18,7 +18,9 @@ tap.test("ERC20", async function(t) {
 	const alice = await remote.user();
 	const bob = await remote.user({ index: 2 });
 
-	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
+	const coin = await god
+		.deploy(ERC20, [100, "Testcoin", "TST"])
+		.then(tr => tr.contract());
 
 	tap.test("reading basic properties", async function(t) {
 		t.equal((await god.read(coin, "name")).toString(), "Testcoin");
@@ -57,7 +59,9 @@ tap.test("ERC20", async function(t) {
 	});
 
 	t.test("approval", async function(t) {
-		const coin = await god.deploy(ERC20, [100, "Testcoin2", "TS2"]);
+		const coin = await god
+			.deploy(ERC20, [100, "Testcoin2", "TS2"])
+			.then(tr => tr.contract());
 		await god
 			.call(coin, "transfer", [alice.address(), 40])
 			.then(tr => tr.success());

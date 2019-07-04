@@ -69,48 +69,6 @@ const balance = await alice.balance();
 const transaction = await alice.give(bob, 10);
 ```
 
-## Contracts
-
-A contract image is a combination of `abi` and `bin` properties which have the corresponding outputs of a Solidity compiler. It will usually be obtained from files:
-
-```js
-const abi = fs.readFileSync("hello-world.abi");
-const bin = fs.readFileSync("hello-world.bin");
-const image = { abi, bin };
-```
-
-Given an existing contract image, it can be deployed from a user's account:
-
-```js
-const contract = await user.deploy(image, [arg1, arg2]);
-```
-
-The returned promise will turn into a `DeployedContract` instance which can be passed to `read` and `call` functions of users to statically read contract's variables, make dry function runs or make actual calls:
-
-```js
-const val = await alice.read(contract, "variableName");
-const result = await alice.read(contract, "functionName", ["arg1", "arg2"]);
-```
-
-## Building contracts
-
-A contract image can also be obtained by using the Compiler object:
-
-```js
-const { Compiler } = require("ethyl");
-const com = new Compiler();
-const image = await com.compile("hello-world.sol");
-```
-
-The `Compiler` object will call the host system's `solc` compiler through the command line.
-
-The constructor takes a map of compiler options which exactly correspond to command line options of the `solc` compiler. For example, to get binaries compatible with older versions of the blockchain:
-
-```js
-const com = new Compiler({ "evm-version": "spuriousDragon" });
-const image = await com.compile("hello-world.sol");
-```
-
 ## Transactions
 
 Transaction objects are returned for contract calls and plain ether transfers:
@@ -155,6 +113,49 @@ const transaction = await contract.transaction("0x1234abcd...");
 ```
 
 The contract is necessary because it provides context (like an ABI definition) to the transaction so that the logs function will work. The `transaction` function will also verify the the transaction exists and belongs to the same contract.
+
+## Contracts
+
+A contract image is a combination of `abi` and `bin` properties which have the corresponding outputs of a Solidity compiler. It will usually be obtained from files:
+
+```js
+const abi = fs.readFileSync("hello-world.abi");
+const bin = fs.readFileSync("hello-world.bin");
+const image = { abi, bin };
+```
+
+Given an existing contract image, it can be deployed from a user's account:
+
+```js
+const transaction = await user.deploy(image, [arg1, arg2]);
+const contract = await transaction.contract();
+```
+
+The returned promise will turn into a `DeployedContract` instance which can be passed to `read` and `call` functions of users to statically read contract's variables, make dry function runs or make actual calls:
+
+```js
+const val = await alice.read(contract, "variableName");
+const result = await alice.read(contract, "functionName", ["arg1", "arg2"]);
+```
+
+## Building contracts
+
+A contract image can also be obtained by using the Compiler object:
+
+```js
+const { Compiler } = require("ethyl");
+const com = new Compiler();
+const image = await com.compile("hello-world.sol");
+```
+
+The `Compiler` object will call the host system's `solc` compiler through the command line.
+
+The constructor takes a map of compiler options which exactly correspond to command line options of the `solc` compiler. For example, to get binaries compatible with older versions of the blockchain:
+
+```js
+const com = new Compiler({ "evm-version": "spuriousDragon" });
+const image = await com.compile("hello-world.sol");
+```
 
 ## Running the tests
 

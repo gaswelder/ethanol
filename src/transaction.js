@@ -1,5 +1,8 @@
 class Transaction {
 	constructor(web3, hash, comment) {
+		if (typeof hash != "string") {
+			throw new Error("expected to has a string as hash, got " + typeof hash);
+		}
 		this._hash = hash;
 		this._web3 = web3;
 		this._comment = comment;

@@ -1,5 +1,6 @@
 const Transaction = require("./transaction");
 const ContractTransaction = require("./contract-transaction");
+const DeploymentTransaction = require("./deployment-transaction");
 
 class User {
 	constructor(web3, addr, blockchain) {
@@ -48,25 +49,33 @@ class User {
 
 	/**
 	 * Deploys a contract.
+	 * Returns a transaction.
 	 *
 	 * @param {ContractBlank} contractBlank Contract definition.
-	 * @param {array} args Contract constructor arguments
-	 * @returns {Promise<DeployedContract>}
+	 * @param {array} args Contract constructor arguments.
+	 * @returns {Promise<DeploymentTransaction>}
 	 */
-	async deploy(blankContract, args = []) {
-		const bc = this._bc;
+	deploy(contractBlank, args = []) {
 		return new Promise((ok, fail) => {
+			const callback = (err, contract) => {
+				if (err) {
+					fail(err);
+					return;
+				}
+				ok(
+					new DeploymentTransaction(this._web3, contract.transactionHash, {
+						abi: contractBlank.abi,
+						bc: this._bc
+					})
+				);
+			};
+
 			this._web3.eth
-				.contract(blankContract.abi)
+				.contract(contractBlank.abi)
 				.new(
 					...args,
-					{ data: blankContract.bin, gas: 2100000, from: this.address() },
-					function(err, contract) {
-						if (err) return fail(err);
-						if (contract.address) {
-							ok(bc.contract(blankContract.abi, contract.address));
-						}
-					}
+					{ data: contractBlank.bin, gas: 2100000, from: this.address() },
+					callback
 				);
 		});
 	}

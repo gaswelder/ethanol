@@ -12,7 +12,9 @@ tap.test("contract functions", async function(t) {
 	const comp = new Compiler();
 	const ERC20 = await comp.compile("tests/TokenERC20");
 	const god = await local.user();
-	const coin = await god.deploy(ERC20, [100, "Testcoin", "TST"]);
+	const coin = await god
+		.deploy(ERC20, [100, "Testcoin", "TST"])
+		.then(tr => tr.contract());
 
 	t.test("contract logs", async function(t) {
 		await god.call(coin, "transfer", ["0x123", 1]).then(tr => tr.success());
@@ -53,8 +55,8 @@ tap.test("contract functions", async function(t) {
 
 	t.test("transaction address check", async function(t) {
 		const [coin1, coin2] = await Promise.all([
-			god.deploy(ERC20, [100, "Testcoin", "TST"]),
-			god.deploy(ERC20, [100, "Testcoin", "TST"])
+			god.deploy(ERC20, [100, "Testcoin", "TST"]).then(tr => tr.contract()),
+			god.deploy(ERC20, [100, "Testcoin", "TST"]).then(tr => tr.contract())
 		]);
 		const tr0 = await god.call(coin1, "transfer", ["0x123", 1]);
 		const hash = tr0.hash();
