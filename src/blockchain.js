@@ -141,26 +141,8 @@ class LocalBlockchain extends Blockchain {
 			web3.eth.getAccounts((err, addrs) => {
 				if (err) return fail(err);
 				resolve(new User(web3, addrs[0], this));
-				this.startPinger(web3, addrs[0]);
 			});
 		});
-	}
-
-	// When working with geth --dev, the blocks are mined instantaneously
-	// and only when needed. Web3, naturally, fails to handle this case and
-	// sends the `eth_newBlockFilter` call too late, and transaction callbacks
-	// are not called until the next block (which may never come in).
-	// So we have to send bogus transactions to let web3 get blocks.
-	startPinger(web3, addr) {
-		if (this.pinger) return;
-		function ping() {
-			web3.eth.sendTransaction({ from: addr, to: addr, value: 0 }, function(
-				err
-			) {
-				if (err) throw err;
-			});
-		}
-		this.pinger = setInterval(ping, 1000);
 	}
 }
 
