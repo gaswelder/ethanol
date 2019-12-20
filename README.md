@@ -106,10 +106,10 @@ await alice.give(bob, 1).then(t => t.success());
 
 This additional step has to be explicit to allow an application choose whether to wait or not for the actual result.
 
-## Calling a contract
+## Calling contracts
 
 In order to work with a contract one needs to know its ABI (which is typically saved as JSON) and its address.
-The contract function on a blockchain object returns a "deployed contract" object.
+The `contract` function on a blockchain object returns a "deployed contract" object.
 
 ```js
 const abi = JSON.parse(fs.readFileSync("contract.abi"));
@@ -118,8 +118,8 @@ const address = "0x1234...";
 const contract = bc.contract(abi, address);
 ```
 
-A user object is also needed to call a contract.
-The contract can be passed to the `read` and `call` functions of a user to statically read the contract's variables, make dry function runs or make actual calls:
+Only a user can call a contract function, so a user object is required.
+User instances have `read` and `call` methods to statically read the contract's variables, make dry function runs or make actual calls:
 
 ```js
 const val = await alice.read(contract, "variableName");
@@ -127,13 +127,27 @@ const result = await alice.read(contract, "functionName", ["arg1", "arg2"]);
 const transaction = await alice.call(contract, "functionName");
 ```
 
-The result of the `read` promise is just the value being read.
-The result of the `call` promise is a contract call transaction which, as all transactions, has the `success` function,
-but also can return the contract's event logs for that particular call:
+The result of the `read` promise is the value of the variable being read or the return value of the function.
+The result of the `call` promise is a contract call transaction which, like other transactions, has the `success` function:
 
 ```js
 const transaction = await alice.call(contract, "funcName");
-const logs = await transaction.logs();
+try {
+	await transaction.success();
+} catch (error) {
+	// transaction failed
+}
+```
+
+In addition to the generic `success` promise, call transactions can return the contract's event logs for that particular call:
+
+```js
+const transaction = await alice.call(contract, "funcName");
+try {
+	const logs = await transaction.logs();
+} catch (error) {
+	// transaction failed
+}
 ```
 
 Obtaining logs assumes waiting for the transaction to be mined, so it's not necessary to await for transaction.success in this case.
@@ -146,6 +160,24 @@ const transaction = await contract.transaction("0x1234abcd...");
 
 The contract is necessary because it provides context (like an ABI definition) to the transaction so that the logs function will work.
 The `transaction` function will also verify that the transaction exists and belongs to the same contract.
+
+## Getting contract event logs
+
+Given a deployed contract object, it's possible to request its logs for a given range of block numbers:
+
+```js
+const contract = bc.contract(abi, address);
+const block = await bc.blockNumber();
+const logs = await contract.history("ContractEventName", block - 100, block);
+```
+
+Even item is an instance of the `ContractEvent` object which has the `name` method that has the event name and also the `values` method that returns the event's arguments as an object:
+
+```js
+for (const event of logs) {
+	console.log(`event ${event.name()} with values ${event.values}`);
+}
+```
 
 ## Deploying contracts
 

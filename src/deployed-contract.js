@@ -1,4 +1,5 @@
 const ContractTransaction = require("./contract-transaction");
+const ContractEvent = require("./contract-event");
 
 class DeployedContract {
 	constructor(abi, addr, bc) {
@@ -12,7 +13,7 @@ class DeployedContract {
 	}
 
 	handle(web3) {
-		return web3.eth.contract(this._abi).at(this._addr);
+		return new web3.eth.Contract(this._abi, this._addr);
 	}
 
 	/**
@@ -25,8 +26,10 @@ class DeployedContract {
 	async transaction(hash, comment = "") {
 		const tr = new ContractTransaction(this._bc.web3(), hash, this, comment);
 		const receipt = await tr.receipt();
-		if (receipt.to != this._addr) {
-			throw new Error("transaction belongs to another contract");
+		if (receipt.to.toLowerCase() != this._addr.toLowerCase()) {
+			throw new Error(
+				`transaction belongs to contract ${receipt.to}, not ${this._addr}`
+			);
 		}
 		return tr;
 	}
@@ -37,21 +40,20 @@ class DeployedContract {
 	 * @param {string} eventName Name of the event
 	 * @param {Number} fromBlock
 	 * @param {Number} toBlock
-	 * @returns {Promise<object[]>}
+	 *
+	 * @returns {Promise<ContractEvent[]>}
 	 */
-	history(eventName, fromBlock, toBlock) {
-		const web3 = this._bc.web3();
-		const contract = web3.eth.contract(this._abi).at(this._addr);
-		if (!contract[eventName]) {
+	async history(eventName, fromBlock, toBlock) {
+		const handle = this.handle(this._bc.web3());
+		if (!handle.events[eventName]) {
 			return Promise.reject(new Error("unknown event: " + eventName));
 		}
-		const event = contract[eventName]({}, { fromBlock, toBlock });
-		return new Promise(function(ok, fail) {
-			event.get(function(err, list) {
-				if (err) return fail(err);
-				ok(list);
-			});
+		const list = await handle.getPastEvents(eventName, {
+			filter: {},
+			fromBlock,
+			toBlock
 		});
+		return list.map(obj => new ContractEvent(obj));
 	}
 }
 

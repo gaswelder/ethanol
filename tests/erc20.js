@@ -17,6 +17,7 @@ tap.test("ERC20", async function(t) {
 	const god = await local.user();
 	const alice = await remote.user();
 	const bob = await remote.user({ index: 2 });
+	await god.give(alice, 50000);
 
 	const coin = await god
 		.deploy(ERC20, [100, "Testcoin", "TST"])
@@ -44,9 +45,9 @@ tap.test("ERC20", async function(t) {
 
 	t.test("direct transfer", async function(t) {
 		const r = await god.call(coin, "transfer", [alice.address(), 1]);
-		const logs = await r.logs();
-		t.ok(logs.length > 0);
-		t.equals(logs[0].event, "Transfer");
+		const events = await r.logs();
+		t.ok(events.length > 0);
+		t.equals(events[0].name(), "Transfer");
 
 		t.equal(
 			(await god.read(coin, "balanceOf", [god.address()])).toString(),
@@ -90,20 +91,18 @@ tap.test("ERC20", async function(t) {
 				.call(coin, "approve", [god.address(), 6])
 				.then(tr => tr.success());
 			t.equal(
-				(await god.read(coin, "allowance", [
-					alice.address(),
-					god.address()
-				])).toString(),
+				(
+					await god.read(coin, "allowance", [alice.address(), god.address()])
+				).toString(),
 				"6"
 			);
 			await god
 				.call(coin, "transferFrom", [alice.address(), bob.address(), 5])
 				.then(tr => tr.success());
 			t.equal(
-				(await god.read(coin, "allowance", [
-					alice.address(),
-					god.address()
-				])).toString(),
+				(
+					await god.read(coin, "allowance", [alice.address(), god.address()])
+				).toString(),
 				"1"
 			);
 			t.equal(

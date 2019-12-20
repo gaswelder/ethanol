@@ -7,6 +7,7 @@ tap.tearDown(function() {
 
 const ipc = "ipc://./data/geth.ipc";
 const local = Blockchain.at(ipc);
+const SomeUserAddress = "0x5e94baef74b60e98116b971e9240d914f4059e27";
 
 tap.test("contract functions", async function(t) {
 	const comp = new Compiler();
@@ -17,25 +18,27 @@ tap.test("contract functions", async function(t) {
 		.then(tr => tr.contract());
 
 	t.test("contract logs", async function(t) {
-		await god.call(coin, "transfer", ["0x123", 1]).then(tr => tr.success());
+		await god
+			.call(coin, "transfer", [SomeUserAddress, 1])
+			.then(tr => tr.success());
 		const logs = await coin.history("Transfer", 0, 10000);
 		t.equal(logs.length, 1);
-		const args = logs[0].args;
-		t.equal(args.from, god.address());
-		t.ok(args.value.eq(1));
+		const values = logs[0].values();
+		t.equal(values.from, god.address());
+		t.equal(values.value, "1");
 	});
 
 	t.test("transaction logs", async function(t) {
-		const tr = await god.call(coin, "transfer", ["0x123", 1]);
+		const tr = await god.call(coin, "transfer", [SomeUserAddress, 1]);
 		const logs = await tr.logs();
 		t.equal(logs.length, 1);
-		const args = logs[0].args;
+		const args = logs[0].values();
 		t.equal(args.from, god.address());
-		t.ok(args.value.eq(1));
+		t.equal(args.value, "1");
 	});
 
 	t.test("existing transaction", async function(t) {
-		const tr0 = await god.call(coin, "transfer", ["0x123", 1]);
+		const tr0 = await god.call(coin, "transfer", [SomeUserAddress, 1]);
 		const tr1 = await coin.transaction(tr0.hash());
 		await tr1.success();
 		t.ok(true);
@@ -58,7 +61,7 @@ tap.test("contract functions", async function(t) {
 			god.deploy(ERC20, [100, "Testcoin", "TST"]).then(tr => tr.contract()),
 			god.deploy(ERC20, [100, "Testcoin", "TST"]).then(tr => tr.contract())
 		]);
-		const tr0 = await god.call(coin1, "transfer", ["0x123", 1]);
+		const tr0 = await god.call(coin1, "transfer", [SomeUserAddress, 1]);
 		const hash = tr0.hash();
 
 		// Using the correct contract should succeed

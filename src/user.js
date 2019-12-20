@@ -49,47 +49,53 @@ class User {
 
 	/**
 	 * Deploys a contract.
-	 * Returns a transaction.
+	 * Returns a contract deployment transaction.
 	 *
 	 * @param {ContractBlank} contractBlank Contract definition.
 	 * @param {array} args Contract constructor arguments.
+	 *
 	 * @returns {Promise<DeploymentTransaction>}
 	 */
 	deploy(contractBlank, args = []) {
 		return new Promise((ok, fail) => {
-			const callback = (err, contract) => {
-				if (err) {
-					fail(err);
-					return;
-				}
-				ok(
-					new DeploymentTransaction(this._web3, contract.transactionHash, {
-						abi: contractBlank.abi,
-						bc: this._bc
-					})
-				);
-			};
+			const contract = new this._web3.eth.Contract(contractBlank.abi);
+			const tr = contract.deploy({ data: contractBlank.bin, arguments: args });
 
-			this._web3.eth
-				.contract(contractBlank.abi)
-				.new(
-					...args,
-					{ data: contractBlank.bin, gas: 2100000, from: this.address() },
-					callback
-				);
+			tr.send({
+				from: this.address(),
+				gas: 2100000
+			})
+				.on("error", fail)
+				.on("transactionHash", hash => {
+					ok(
+						new DeploymentTransaction(this._web3, hash, {
+							abi: contractBlank.abi,
+							bc: this._bc
+						})
+					);
+				});
 		});
 	}
 
+	/**
+	 * Makes a dry ("non-sending") call to a contracts function from
+	 * the user's account.
+	 *
+	 * @param {DeployedContract} contract
+	 * @param {string} func Name of the function to call
+	 * @param {any[]} args Arguments for the function
+	 *
+	 * @return {Promise<any>} Return value of the function.
+	 */
 	read(contract, func, args = []) {
-		return new Promise((ok, fail) => {
-			const h = contract.handle(this._web3);
-			if (!h[func]) {
-				throw new Error("Undefined contract function: " + func);
-			}
-			h[func].call(...args, (err, result) => {
-				if (err) return fail(err);
-				ok(result);
-			});
+		const h = contract.handle(this._web3);
+		if (!h.methods[func]) {
+			throw new Error("Undefined contract function: " + func);
+		}
+		const call = h.methods[func](...args);
+		return call.call({
+			from: this.address(),
+			gasPrice: 0
 		});
 	}
 
@@ -99,27 +105,36 @@ class User {
 	 * @param {DeployedContract} contract
 	 * @param {string} func Name of the function to call
 	 * @param {array} args Arguments for the function
+	 *
 	 * @returns {Promise<ContractTransaction>}
 	 */
 	call(contract, func, args = []) {
-		return new Promise((ok, fail) => {
+		return new Promise(async (ok, fail) => {
 			const h = contract.handle(this._web3);
-			const tr = {
-				from: this.address()
-			};
-			h[func].estimateGas(...args, tr, (err, gas) => {
-				if (err) return fail(err);
-				// On pre-byzantium we have to check if all gas was used to determine
-				// whether the transaction had thrown. If we allow the exact amount of
-				// gas, we will most likely get a false positive. To avoid, give a little
-				// more gas than needed.
-				tr.gas = gas + 100;
-
-				h[func].sendTransaction(...args, tr, (err, hash) => {
-					if (err) return fail(err);
+			if (!h.methods[func]) {
+				throw new Error("Undefined contract function: " + func);
+			}
+			const call = h.methods[func](...args);
+			let gas;
+			try {
+				gas = await call.estimateGas({ from: this.address() });
+			} catch (err) {
+				fail(err);
+				return;
+			}
+			call
+				.send({
+					from: this.address(),
+					// On pre-byzantium we have to check if all gas was used to determine
+					// whether the transaction had thrown. If we allow the exact amount of
+					// gas, we will most likely get a false positive. To avoid, give a little
+					// more gas than needed.
+					gas: gas + 100
+				})
+				.on("transactionHash", hash => {
 					ok(new ContractTransaction(this._web3, hash, contract, func));
-				});
-			});
+				})
+				.on("error", fail);
 		});
 	}
 }
