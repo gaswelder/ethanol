@@ -24,19 +24,34 @@ tap.test("block retrieval", async function(t) {
 });
 
 tap.test("users", async function(t) {
-	const alice = await remote.user({ index: 0 });
-	const bob = await remote.user({ index: 1 });
+	const m =
+		"science truck gospel alone trust effort scorpion laundry habit champion magic uncover";
+	const alice = await remote.userFromMnemonic(m, 0);
+	const bob = await remote.userFromMnemonic(m, 1);
 	t.notEqual(alice.address(), bob.address());
 });
 
-tap.test("ipc user", async function(t) {
-	const god = await local.user();
-	t.notEqual((await god.balance()).toString(), "0", "god has ether");
-});
+// tap.test("ipc user", async function(t) {
+// 	const god = await local.user();
+// 	t.notEqual((await god.balance()).toString(), "0", "god has ether");
+// 	console.log("god is at", god.address());
+
+// 	const someOtherUser = await local.userFromMnemonic(
+// 		"maid large usual there sample dentist athlete eager shoe kitten worth vacuum",
+// 		0
+// 	);
+// 	t.equal(
+// 		someOtherUser.address(),
+// 		"0x5e94baef74b60e98116b971e9240d914f4059e27"
+// 	);
+// 	t.equal(await someOtherUser.balance(), "0");
+// });
 
 tap.test("eth transfer", async function(t) {
 	const god = await local.user();
-	const alice = await remote.user({ index: 0 });
+	const alice = await remote.user(
+		"science truck gospel alone trust effort scorpion laundry habit champion magic uncover"
+	);
 	const r = god.give(alice, 1).then(tr => tr.success());
 	t.resolves(r);
 });

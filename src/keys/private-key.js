@@ -33,6 +33,10 @@ class PrivateKey {
 	toBuffer() {
 		return Buffer.from(this._value, "hex");
 	}
+
+	toHex() {
+		return this._value;
+	}
 }
 
 module.exports = PrivateKey;

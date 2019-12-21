@@ -16,7 +16,10 @@ tap.test("ERC20", async function(t) {
 	const ERC20 = await comp.compile("tests/TokenERC20");
 	const god = await local.user();
 	const alice = await remote.user();
-	const bob = await remote.user({ index: 2 });
+	const bob = await remote.userFromMnemonic(
+		"science truck gospel alone trust effort scorpion laundry habit champion magic uncover",
+		2
+	);
 	await god.give(alice, 50000);
 
 	const coin = await god
