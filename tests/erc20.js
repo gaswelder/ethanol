@@ -52,14 +52,17 @@ tap.test("ERC20", async function(t) {
 		t.ok(events.length > 0);
 		t.equals(events[0].name(), "Transfer");
 
-		t.equal(
-			(await god.read(coin, "balanceOf", [god.address()])).toString(),
-			"99999999999999999999"
-		);
-		t.equal(
-			(await god.read(coin, "balanceOf", [alice.address()])).toString(),
-			"1"
-		);
+		const godBalance = () => god.read(coin, "balanceOf", [god.address()]);
+		const aliceBalance = () => alice.read(coin, "balanceOf", [alice.address()]);
+
+		t.equal((await godBalance()).toString(), "99999999999999999999");
+		t.equal((await aliceBalance()).toString(), "1");
+
+		await alice
+			.call(coin, "transfer", [god.address(), 1])
+			.then(tr => tr.success());
+		t.equal((await godBalance()).toString(), "100000000000000000000");
+		t.equal((await aliceBalance()).toString(), "0");
 	});
 
 	t.test("approval", async function(t) {
