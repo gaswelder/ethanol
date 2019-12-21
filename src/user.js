@@ -75,10 +75,11 @@ class User {
 		return new Promise(async (ok, fail) => {
 			const contract = new this._web3.eth.Contract(contractBlank.abi);
 			const tr = contract.deploy({ data: contractBlank.bin, arguments: args });
+			const estimatedGas = await tr.estimateGas();
 
 			tr.send({
 				from: this.address(),
-				gas: 2100000
+				gas: estimatedGas
 			})
 				.on("error", fail)
 				.on("transactionHash", hash => {
