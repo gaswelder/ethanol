@@ -1,10 +1,9 @@
 const net = require("net");
-const HookedWeb3Provider = require("hooked-web3-provider");
 const Web3 = require("web3");
 const User = require("./user");
 const Mnemonic = require("./keys/mnemonic");
-const Web3Signer = require("./keys/web3-signer");
 const DeployedContract = require("./deployed-contract");
+const providers = require("./providers");
 
 class Blockchain {
 	constructor(url) {
@@ -104,9 +103,8 @@ class Blockchain {
 
 class RemoteBlockchain extends Blockchain {
 	web3() {
-		const provider = new Web3.providers.HttpProvider(this.url);
-		const web3 = new Web3(provider);
-		return web3;
+		const p = providers.makeProvider(providers.httpSender(this.url));
+		return new Web3(p);
 	}
 
 	async userFromMnemonic(mnemonic, index = 0) {
@@ -114,11 +112,10 @@ class RemoteBlockchain extends Blockchain {
 		const key = m.deriveKey(index);
 		const addr = key.address();
 
-		const provider = new HookedWeb3Provider({
-			host: this.url,
-			transaction_signer: new Web3Signer(key)
-		});
-		const web3 = new Web3(provider);
+		const p = providers.makeProvider(providers.httpSender(this.url));
+		const sp = providers.signify(p, key);
+		const web3 = new Web3(sp);
+
 		return new User(web3, addr, this);
 	}
 
