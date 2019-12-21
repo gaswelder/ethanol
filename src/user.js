@@ -56,8 +56,23 @@ class User {
 	 *
 	 * @returns {Promise<DeploymentTransaction>}
 	 */
-	deploy(contractBlank, args = []) {
-		return new Promise((ok, fail) => {
+	async deploy(contractBlank, args = []) {
+		if (
+			typeof contractBlank != "object" ||
+			!contractBlank.abi[0] ||
+			!Array.isArray(contractBlank.abi[0].inputs)
+		) {
+			throw new Error(
+				"contractBlank.abi is not a valid object (expecting a result of JSON.parse)"
+			);
+		}
+		if (!contractBlank.bin.startsWith("0x")) {
+			return this.deploy(
+				{ ...contractBlank, bin: "0x" + contractBlank.bin },
+				args
+			);
+		}
+		return new Promise(async (ok, fail) => {
 			const contract = new this._web3.eth.Contract(contractBlank.abi);
 			const tr = contract.deploy({ data: contractBlank.bin, arguments: args });
 
