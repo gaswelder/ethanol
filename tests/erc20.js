@@ -1,9 +1,7 @@
-const tap = require("tap");
 const { Compiler, Blockchain } = require("../src");
+const { assert } = require("chai");
 
-tap.tearDown(function() {
-	process.exit(0);
-});
+// after(() => process.exit(0));
 
 const ipc = "ipc://./data/geth.ipc";
 const rpc = "http://localhost:8545";
@@ -11,92 +9,97 @@ const rpc = "http://localhost:8545";
 const local = Blockchain.at(ipc);
 const remote = Blockchain.at(rpc);
 
-tap.test("ERC20", async function(t) {
+describe("ERC20", async function() {
 	const comp = new Compiler();
-	const ERC20 = await comp.compile("tests/TokenERC20");
-	const god = await local.user();
-	const alice = await remote.user();
-	const bob = await remote.userFromMnemonic(
-		"science truck gospel alone trust effort scorpion laundry habit champion magic uncover",
-		2
-	);
-	await god.give(alice, 50000);
+	let ERC20, god, alice, bob, coin;
 
-	const coin = await god
-		.deploy(ERC20, [100, "Testcoin", "TST"])
-		.then(tr => tr.contract());
-
-	tap.test("reading basic properties", async function(t) {
-		t.equal((await god.read(coin, "name")).toString(), "Testcoin");
-		t.equal((await god.read(coin, "symbol")).toString(), "TST");
+	before(async () => {
+		ERC20 = await comp.compile("tests/TokenERC20");
+		god = await local.user();
+		alice = await remote.user();
+		bob = await remote.userFromMnemonic(
+			"science truck gospel alone trust effort scorpion laundry habit champion magic uncover",
+			2
+		);
+		await god.give(alice, 50000);
+		coin = await god
+			.deploy(ERC20, [100, "Testcoin", "TST"])
+			.then(tr => tr.contract());
 	});
 
-	t.test("balances", async function(t) {
-		t.equal(
+	it("reading basic properties", async function() {
+		assert.equal((await god.read(coin, "name")).toString(), "Testcoin");
+		assert.equal((await god.read(coin, "symbol")).toString(), "TST");
+	});
+
+	it("balances", async function() {
+		assert.equal(
 			(await god.read(coin, "balanceOf", [god.address()])).toString(),
 			"100000000000000000000"
 		);
-		t.equal(
+		assert.equal(
 			(await alice.read(coin, "balanceOf", [alice.address()])).toString(),
 			"0"
 		);
-		t.equal(
+		assert.equal(
 			(await god.read(coin, "balanceOf", [alice.address()])).toString(),
 			"0"
 		);
 	});
 
-	t.test("direct transfer", async function(t) {
+	it("direct transfer", async function() {
 		const r = await god.call(coin, "transfer", [alice.address(), 1]);
 		const events = await r.logs();
-		t.ok(events.length > 0);
-		t.equals(events[0].name(), "Transfer");
+		assert.isNotEmpty(events);
+		assert.equal(events[0].name(), "Transfer");
 
 		const godBalance = () => god.read(coin, "balanceOf", [god.address()]);
 		const aliceBalance = () => alice.read(coin, "balanceOf", [alice.address()]);
 
-		t.equal((await godBalance()).toString(), "99999999999999999999");
-		t.equal((await aliceBalance()).toString(), "1");
+		assert.equal((await godBalance()).toString(), "99999999999999999999");
+		assert.equal((await aliceBalance()).toString(), "1");
 
 		await alice
 			.call(coin, "transfer", [god.address(), 1])
 			.then(tr => tr.success());
-		t.equal((await godBalance()).toString(), "100000000000000000000");
-		t.equal((await aliceBalance()).toString(), "0");
+		assert.equal((await godBalance()).toString(), "100000000000000000000");
+		assert.equal((await aliceBalance()).toString(), "0");
 	});
 
-	t.test("approval", async function(t) {
+	it("approval", async function() {
 		const coin = await god
 			.deploy(ERC20, [100, "Testcoin2", "TS2"])
 			.then(tr => tr.contract());
 		await god
 			.call(coin, "transfer", [alice.address(), 40])
 			.then(tr => tr.success());
-		t.equal(
+		assert.equal(
 			(await alice.read(coin, "balanceOf", [alice.address()])).toString(),
 			"40"
 		);
-		t.equal(
+		assert.equal(
 			(await bob.read(coin, "balanceOf", [bob.address()])).toString(),
 			"0"
 		);
 
-		t.test("fail without approval", async function(t) {
+		it("fail without approval", async function() {
 			try {
 				await god
 					.call(coin, "transferFrom", [alice.address(), bob.address(), 5])
 					.then(tr => tr.success());
-				t.ok(false);
+				throw "1";
 			} catch (e) {
-				t.ok(true);
+				if (e == "1") {
+					throw new Error("transferFrom should have failed");
+				}
 			}
 		});
 
-		t.test("ok with approval", async function(t) {
+		it("ok with approval", async function() {
 			await alice
 				.call(coin, "approve", [god.address(), 6])
 				.then(tr => tr.success());
-			t.equal(
+			assert.equal(
 				(
 					await god.read(coin, "allowance", [alice.address(), god.address()])
 				).toString(),
@@ -105,13 +108,13 @@ tap.test("ERC20", async function(t) {
 			await god
 				.call(coin, "transferFrom", [alice.address(), bob.address(), 5])
 				.then(tr => tr.success());
-			t.equal(
+			assert.equal(
 				(
 					await god.read(coin, "allowance", [alice.address(), god.address()])
 				).toString(),
 				"1"
 			);
-			t.equal(
+			assert.equal(
 				(await bob.read(coin, "balanceOf", [bob.address()])).toString(),
 				"5"
 			);

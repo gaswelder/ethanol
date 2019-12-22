@@ -8,7 +8,7 @@ while [ `ls data | grep geth.ipc | wc -l` -eq '0' ]; do
     sleep 1
 done
 
-yarn run tap tests
+yarn mocha tests -t 10000 --exit
 
 kill $pid
 wait $pid

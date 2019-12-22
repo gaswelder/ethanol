@@ -1,62 +1,65 @@
-const tap = require("tap");
+const { assert } = require("chai");
 const { Compiler, Blockchain } = require("../src");
 
-tap.tearDown(function() {
-	process.exit(0);
-});
+// after(() => process.exit(0));
 
 const ipc = "ipc://./data/geth.ipc";
 const local = Blockchain.at(ipc);
 const SomeUserAddress = "0x5e94baef74b60e98116b971e9240d914f4059e27";
 
-tap.test("contract functions", async function(t) {
+describe("contract functions", function() {
 	const comp = new Compiler();
-	const ERC20 = await comp.compile("tests/TokenERC20");
-	const god = await local.user();
-	const coin = await god
-		.deploy(ERC20, [100, "Testcoin", "TST"])
-		.then(tr => tr.contract());
+	let ERC20, god, coin;
 
-	t.test("contract logs", async function(t) {
+	before(async () => {
+		ERC20 = await comp.compile("tests/TokenERC20");
+		god = await local.user();
+		coin = await god
+			.deploy(ERC20, [100, "Testcoin", "TST"])
+			.then(tr => tr.contract());
+	});
+
+	it("contract logs", async function() {
 		await god
 			.call(coin, "transfer", [SomeUserAddress, 1])
 			.then(tr => tr.success());
 		const logs = await coin.history("Transfer", 0, 10000);
-		t.equal(logs.length, 1);
+		assert.equal(logs.length, 1);
 		const values = logs[0].values();
-		t.equal(values.from, god.address());
-		t.equal(values.value, "1");
+		assert.equal(values.from, god.address());
+		assert.equal(values.value, "1");
 	});
 
-	t.test("transaction logs", async function(t) {
+	it("transaction logs", async function() {
 		const tr = await god.call(coin, "transfer", [SomeUserAddress, 1]);
 		const logs = await tr.logs();
-		t.equal(logs.length, 1);
+		assert.equal(logs.length, 1);
 		const args = logs[0].values();
-		t.equal(args.from, god.address());
-		t.equal(args.value, "1");
+		assert.equal(args.from, god.address());
+		assert.equal(args.value, "1");
 	});
 
-	t.test("existing transaction", async function(t) {
+	it("existing transaction", async function() {
 		const tr0 = await god.call(coin, "transfer", [SomeUserAddress, 1]);
 		const tr1 = await coin.transaction(tr0.hash());
 		await tr1.success();
-		t.ok(true);
 	});
 
-	t.test("non-existing transaction", async function(t) {
+	it("non-existing transaction", async function() {
 		// Non-existing hash
 		const h =
 			"0x98e6a7d3379a5f0184f234a89589657b4d161bf6c6764ccb74105cbb474bd598";
 		try {
 			await coin.transaction(h);
-			t.ok(false, "Should have failed for unknown transaction");
+			throw "1";
 		} catch (e) {
-			t.ok(true);
+			if (e == "1") {
+				throw new Error("Should have failed for unknown transaction");
+			}
 		}
 	});
 
-	t.test("transaction address check", async function(t) {
+	it("transaction address check", async function() {
 		const [coin1, coin2] = await Promise.all([
 			god.deploy(ERC20, [100, "Testcoin", "TST"]).then(tr => tr.contract()),
 			god.deploy(ERC20, [100, "Testcoin", "TST"]).then(tr => tr.contract())
@@ -66,9 +69,16 @@ tap.test("contract functions", async function(t) {
 
 		// Using the correct contract should succeed
 		const tr1 = await coin1.transaction(hash);
-		t.resolves(tr1.success());
+		await tr1.success();
 
 		// Using another contract should fail right away
-		t.rejects(coin2.transaction(hash));
+		try {
+			await coin2.transaction(hash);
+			throw "1";
+		} catch (e) {
+			if (e == "1") {
+				throw new Error("should have rejected");
+			}
+		}
 	});
 });
